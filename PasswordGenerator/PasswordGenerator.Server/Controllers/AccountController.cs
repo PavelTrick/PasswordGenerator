@@ -13,6 +13,7 @@ using PasswordGenerator.Server.DAL.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 
 namespace PasswordGenerator.Server.Controllers
 {
@@ -71,7 +72,6 @@ namespace PasswordGenerator.Server.Controllers
 
             if (result.Succeeded)
             {
-                var user = _userManager.Users.FirstOrDefault(i => i.UserName == model.Login);
                 LoginResponse LoginResponse = new LoginResponse()
                 {
                     AccessToken = Guid.NewGuid().ToString(),
@@ -79,7 +79,10 @@ namespace PasswordGenerator.Server.Controllers
 
                 return Ok(LoginResponse);
             }
-            return Unauthorized();
+            else
+            {
+                return Unauthorized();
+            }
         }
 
         [HttpPost]

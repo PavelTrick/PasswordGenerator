@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -12,7 +13,6 @@ export class LoginComponent {
     loginForm: FormGroup;
 
     constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {
-      console.log("LOGIN");
       this.loginForm = this.fb.group({
         login: ['', [Validators.required]],
         password: ['', Validators.required]
@@ -26,10 +26,15 @@ export class LoginComponent {
           response => {
             this.router.navigate(['/home']);
           },
-          error => {
-            // Handle login error
-          }
-        );
+          (error: HttpErrorResponse) => {
+            if (error instanceof HttpErrorResponse) {
+              if (error.status) {
+                alert(`Backend returned code ${error.status} ${error.statusText}`);
+              }
+            } else {
+              alert('An unexpected error occurred. Please try again later.');
+            }
+          });
       }
     }
 

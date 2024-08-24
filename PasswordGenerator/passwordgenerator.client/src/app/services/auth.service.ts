@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import { LoginResponse } from '../models/login-response.model';
@@ -8,7 +8,7 @@ import { LoginModel } from '../models/login.model';
   providedIn: 'root'
 })
 export class AuthService {
-  private baseUrl = 'http://localhost:5091/api/account';
+  private baseUrl = 'https://localhost:5091/api/account';
 
   constructor(private http: HttpClient) { }
 
@@ -26,22 +26,25 @@ export class AuthService {
         }
         return of(false);
       }),
-      catchError(error => {
-        console.error('Login failed', error);
-        return of(false);
+      catchError((error: HttpErrorResponse) => {
+        if (error.status) {
+          alert(`Backend returned code ${error.status} ${error.statusText}`);
+        } else {
+          alert('An unexpected error occurred. Please try again later.');
+        }
+        return of(false);  // Emit false in case of an error
       })
-    );
+      )
   }
 
-  // Check if the user is authenticated
   isAuthenticated(): boolean {
     const token = localStorage.getItem('authToken');
     return !!token;
   }
 
   // Logout method
-  logout(): void {
-    localStorage.removeItem('authToken');
+  logout(): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/logout`, { withCredentials: true })
   }
 
 register(login: string, password: string): Observable<boolean> {
@@ -58,9 +61,13 @@ register(login: string, password: string): Observable<boolean> {
       }
       return false;
     }),
-    catchError(error => {
-      console.error('Login failed', error);
-      return of(false);
+    catchError((error: HttpErrorResponse) => {
+      if (error.status) {
+        alert(`Backend returned code ${error.status} ${error.statusText}`);
+      } else {
+        alert('An unexpected error occurred. Please try again later.');
+      }
+      return of(false);  // Emit false in case of an error
     })
   );
 }

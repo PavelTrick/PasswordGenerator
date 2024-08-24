@@ -4,6 +4,7 @@ import { Password } from '../../models/password.model';
 import { GenerateResult } from '../../models/generate-result.model';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'password-generator',
@@ -68,6 +69,8 @@ export class PasswordGeneratorComponent implements OnInit {
 
   private loadUserPasswords() {
     this.passwordService.getUserPasswords().subscribe(result => {
+      
+      console.log(result);
       this.passwords = result;
     });
 
