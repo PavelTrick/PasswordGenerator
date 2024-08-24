@@ -9,6 +9,5 @@
         public bool IncludeUppercase { get; set; }
         public bool IncludeLowercase { get; set; }
         public double ExpiredIn { get; set; }
-        public int UserId { get; set; }
     }
 }

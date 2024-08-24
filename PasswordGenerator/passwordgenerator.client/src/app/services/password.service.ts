@@ -21,7 +21,7 @@ export class PasswordService {
     return this.http.post<GenerateResult>(this.apiUrl, request, { headers, withCredentials: true }).pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status) {
-          alert(`Backend returned code ${error.status} ${error.statusText}`);
+          alert(`Backend returned error code ${error.status} ${error.error.title}`);
         } else {
           alert('An unexpected error occurred. Please try again later.');
         }
@@ -41,7 +41,7 @@ export class PasswordService {
       .pipe(
         catchError((error: HttpErrorResponse) => {
           if (error.status) {
-            alert(`Backend returned code ${error.status} ${error.statusText}`);
+            alert(`Backend returned error code ${error.status} ${error.error.title}`);
           } else {
             alert('An unexpected error occurred. Please try again later.');
           }
@@ -68,7 +68,7 @@ export class PasswordService {
     .pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status) {
-          alert(`Backend returned code ${error.status} ${error.statusText}`);
+          alert(`Backend returned error code ${error.status} ${error.error.title}`);
         } else {
           alert('An unexpected error occurred. Please try again later.');
         }

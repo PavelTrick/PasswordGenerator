@@ -21,6 +21,11 @@ namespace PasswordGenerator.Server.DAL
                .WithMany() 
                .HasForeignKey(p => p.UserIdentifier)
                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Password>()
+                .HasIndex(p => new { p.UserIdentifier, p.Code })
+                .HasDatabaseName("IX_Password_UserIdentifier_Code")
+                .IsUnique(true);
         }
     }
 }

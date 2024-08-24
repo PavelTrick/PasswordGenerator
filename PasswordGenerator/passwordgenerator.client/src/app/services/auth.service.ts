@@ -27,8 +27,9 @@ export class AuthService {
         return of(false);
       }),
       catchError((error: HttpErrorResponse) => {
+        console.log(error);
         if (error.status) {
-          alert(`Backend returned code ${error.status} ${error.statusText}`);
+          alert(`Backend returned code ${error.status} ${error.error.title}`);
         } else {
           alert('An unexpected error occurred. Please try again later.');
         }

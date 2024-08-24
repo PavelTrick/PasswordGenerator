@@ -19,7 +19,6 @@ export class PasswordGeneratorComponent implements OnInit {
     includeNumbers: false,
     includeUppercase: false,
     includeLowercase: true,
-    userId: 1,
   };
 
   private userId: number = 1;
@@ -49,9 +48,12 @@ export class PasswordGeneratorComponent implements OnInit {
     this.generateInProgress = true;
     this.passwordService.generatePassword(this.passwordRequest)
       .subscribe(result => {
-        this.generateResult = result;
         this.generateInProgress = false;
-        this.loadUserPasswords();
+
+        if(result) {
+          this.generateResult = result;
+          this.loadUserPasswords();
+        }
       });
   }
 

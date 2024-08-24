@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using NuGet.ContentModel;
+using NuGet.Packaging;
 using PasswordGenerator.Server.DAL;
 using PasswordGenerator.Server.DAL.Models;
 using PasswordGenerator.Server.Models;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace PasswordGenerator.Server.BLL.Services
@@ -32,7 +35,7 @@ namespace PasswordGenerator.Server.BLL.Services
                 Stopwatch totalTime = new Stopwatch();
                 totalTime.Start();
                 generateTime.Start();
-                List<string> generatedPassword = GeneratePasswords(passwordRequest, result);
+                List<string> generatedPassword = GeneratePasswords(passwordRequest, result, userId);
                 generateTime.Stop();
 
                 foreach (var password in generatedPassword)
@@ -109,27 +112,42 @@ namespace PasswordGenerator.Server.BLL.Services
             return result > 0;
         }
 
-        private List<string> GeneratePasswords(PasswordRequest passwordRequest, GeneratedPasswords generatedPasswordsResult)
+        private List<string> GeneratePasswords(PasswordRequest passwordRequest, GeneratedPasswords generatedPasswordsResult, string userId)
         {
             string characterSet = GetAlphabet(passwordRequest);
-            List<string> result = new List<string>();
+            HashSet<string> result = new HashSet<string>();
             int amount = passwordRequest.Amount;
 
             Stopwatch generateTime = new Stopwatch();
             Stopwatch verifyTime = new Stopwatch();
 
-            while (amount != 0)
+            while (amount > 0)
             {
                 generateTime.Start();
-                List<string> newPasswords = Generate(passwordRequest, characterSet, amount);
+                List<string> newPasswords = Generate(passwordRequest, characterSet, amount, result);
                 generateTime.Stop();
 
                 verifyTime.Start();
-                var unique = newPasswords.Where(newPassword => _context.Passwords.All(dbPassword => dbPassword.Code != newPassword)).ToList();
+
+                //_context.Passwords
+                //    .Where(p => p.UserIdentifier == passwordRequest.UserId && newPasswords.Contains(p.Code))
+                //    .Select(p => p.Code)
+                //    .ToList();
+
+                var existingPasswords = _context.Passwords
+                 .Where(p => p.UserIdentifier == userId && newPasswords.Contains(p.Code))
+                 .Select(p => p.Code)
+                 .ToList();
+
+                //var unique = newPasswords.Where(newPassword => _context.Passwords.All(dbPassword =>
+                //    dbPassword.UserIdentifier == passwordRequest.UserId &&
+                //    dbPassword.Code != newPassword)).ToList();
                 verifyTime.Stop();
 
+                var unique = newPasswords.Except(existingPasswords).ToList();
+
                 result.AddRange(unique);
-                amount = newPasswords.Count - unique.Count;
+                amount = passwordRequest.Amount - result.Count;
 
                 var duplicationCount = newPasswords.Except(unique).ToList().Count;
 
@@ -145,24 +163,31 @@ namespace PasswordGenerator.Server.BLL.Services
                 verifyTime.Reset();
             }
 
-            return result;
+            return result.ToList();
         }
 
-        private List<string> Generate(PasswordRequest passwordRequest, string characterSet, int amount)
+        private List<string> Generate(PasswordRequest passwordRequest, string characterSet, int amount, HashSet<string> exceptList)
         {
-            List<string> passwords = new List<string>();
+            HashSet<string> passwords = new HashSet<string>(exceptList);
+            Random _random = new Random();
+            var passwordBuilder = new System.Text.StringBuilder(passwordRequest.Length);
+            int totalRequired = amount + exceptList.Count;
 
-            while (passwords.Count < amount)
+            while (passwords.Count < totalRequired)
             {
-                var newPassword = new string(Enumerable.Repeat(characterSet, passwordRequest.Length).Select(s => s[_random.Next(s.Length)]).ToArray());
+                passwordBuilder.Clear();
 
-                if (!passwords.Contains(newPassword))
+                for (int i = 0; i < passwordRequest.Length; i++)
                 {
-                    passwords.Add(newPassword);
+                    passwordBuilder.Append(characterSet[_random.Next(characterSet.Length)]);
                 }
+
+                var newPassword = passwordBuilder.ToString();
+
+                passwords.Add(newPassword);
             }
 
-            return passwords;
+            return passwords.Except(exceptList).Take(amount).ToList();
         }
 
         private string GetAlphabet(PasswordRequest passwordRequest)

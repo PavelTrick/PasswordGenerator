@@ -5,5 +5,4 @@ export interface PasswordRequest {
     includeNumbers: boolean;
     includeUppercase: boolean;
     includeLowercase: boolean;
-    userId: number;
   }
