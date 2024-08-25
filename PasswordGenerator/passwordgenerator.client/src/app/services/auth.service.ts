@@ -45,6 +45,7 @@ export class AuthService {
 
   // Logout method
   logout(): Observable<any> {
+    localStorage.removeItem('authToken');
     return this.http.post<any>(`${this.baseUrl}/logout`, { withCredentials: true })
   }
 

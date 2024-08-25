@@ -1,19 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using PasswordGenerator.Server.BLL.Services;
-using PasswordGenerator.Server.DAL;
 using PasswordGenerator.Server.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.Extensions.Configuration;
-using System.Configuration;
 using PasswordGenerator.Server.DAL.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
 
 namespace PasswordGenerator.Server.Controllers
 {
@@ -23,18 +12,11 @@ namespace PasswordGenerator.Server.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly ILogger<AccountController> _logger;
-        private readonly IConfiguration _configuration;
 
-        public AccountController(UserManager<ApplicationUser> userManager,
-                                 SignInManager<ApplicationUser> signInManager,
-                                 ILogger<AccountController> logger,
-                                  IConfiguration configuration)
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _logger = logger;
-            _configuration = configuration;
         }
 
         [HttpPost("register"), AllowAnonymous]
@@ -51,12 +33,15 @@ namespace PasswordGenerator.Server.Controllers
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, false);
+
                 LoginResponse LoginResponse = new LoginResponse()
                 {
                     AccessToken = Guid.NewGuid().ToString(),
                 };
+
                 return Ok(LoginResponse);
             }
+
             return BadRequest();
         }
 

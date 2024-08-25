@@ -4,6 +4,5 @@
     {
         public int TotalCount { get; set; }
         public int DuplicateCount { get; set;}
-
     }
 }

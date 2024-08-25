@@ -5,6 +5,7 @@ import { GenerateResult } from '../../models/generate-result.model';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { catchError, finalize, of } from 'rxjs';
 
 @Component({
   selector: 'password-generator',
@@ -27,8 +28,9 @@ export class PasswordGeneratorComponent implements OnInit {
   public statistic: any;
 
   public generateInProgress: boolean = false;
+  public deleteInProgress: boolean = false;
 
-  constructor(private passwordService: PasswordService, private authService: AuthService, private router: Router) {}
+  constructor(private passwordService: PasswordService, private authService: AuthService, private router: Router) { }
 
   ngOnInit() {
     this.loadUserPasswords();
@@ -44,13 +46,20 @@ export class PasswordGeneratorComponent implements OnInit {
     return this.generateInProgress ? "Loading..." : "Generate";
   }
 
+  get deleteBtnText(): string {
+    return this.deleteInProgress ? "Clearing..." : "Clear all";
+  }
+
   onGenerate() {
     this.generateInProgress = true;
     this.passwordService.generatePassword(this.passwordRequest)
+      .pipe(
+        finalize(() => {
+          this.generateInProgress = false;
+        })
+      )
       .subscribe(result => {
-        this.generateInProgress = false;
-
-        if(result) {
+        if (result) {
           this.generateResult = result;
           this.loadUserPasswords();
         }
@@ -58,20 +67,26 @@ export class PasswordGeneratorComponent implements OnInit {
   }
 
   onClear() {
+    this.deleteInProgress = true;
     this.passwordService.delete(this.userId)
+      .pipe(
+        finalize(() => {
+          this.deleteInProgress = false;
+        })
+      )
       .subscribe(_ => {
-       this.loadUserPasswords();
+        this.loadUserPasswords();
       });
   }
 
   onLogout() {
-      this.authService.logout();
-      this.router.navigate(['/login']);
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   private loadUserPasswords() {
     this.passwordService.getUserPasswords().subscribe(result => {
-      
+
       console.log(result);
       this.passwords = result;
     });

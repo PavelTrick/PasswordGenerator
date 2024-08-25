@@ -1,12 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using PasswordGenerator.Server.DAL.Models;
+﻿using Microsoft.AspNetCore.Mvc;
 using PasswordGenerator.Server.DAL;
 using PasswordGenerator.Server.BLL.Services;
 using PasswordGenerator.Server.Models;
-using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
 namespace PasswordGenerator.Server.Controllers
@@ -15,11 +10,11 @@ namespace PasswordGenerator.Server.Controllers
     [ApiController]
     public class PasswordController : ControllerBase
     {
-        private readonly IPasswordGeneratorService _passwordGeneratorService;
+        private readonly IPasswordService _passwordGeneratorService;
 
         public PasswordController(AppDbContext context)
         {
-            _passwordGeneratorService = new PasswordGeneratorService(context);
+            _passwordGeneratorService = new PasswordService(context);
 
         }
 
@@ -32,22 +27,33 @@ namespace PasswordGenerator.Server.Controllers
             }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (String.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not found");
+            }
+
             var generatedPassword = _passwordGeneratorService.GetUserPasswords(userId);
 
             return Ok(generatedPassword);
         }
 
         [HttpGet("statistic")]
-        public async Task<IActionResult> GetUserPasswordStatistic()
+        public IActionResult GetUserPasswordStatistic()
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
                 return BadRequest("User is not authenticated");
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var generatedPassword = await _passwordGeneratorService.GetUserPasswordStatistic(userId);
+            if (String.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not found");
+            }
+
+            var generatedPassword = _passwordGeneratorService.GetUserPasswordStatistic(userId);
 
             return Ok(generatedPassword);
         }
@@ -60,11 +66,24 @@ namespace PasswordGenerator.Server.Controllers
                 return BadRequest("User is not authenticated");
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            GeneratedPasswords generatedPassword = await _passwordGeneratorService.GenerateAndSave(request, userId);
+            if (String.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not found");
+            }
 
-            return Ok(generatedPassword);
+            try
+            {
+
+                GeneratedPasswords generatedPassword = await _passwordGeneratorService.GenerateAndSave(request, userId);
+
+                return Ok(generatedPassword);
+            }
+            catch (Exception ex)
+            {
+                return Problem($"{ex.Message}");
+            }
         }
 
         [HttpDelete]
@@ -75,7 +94,13 @@ namespace PasswordGenerator.Server.Controllers
                 return BadRequest("User is not authenticated");
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (String.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not found");
+            }
+
             bool result = await _passwordGeneratorService.ClearUserPasswords(userId);
 
             return Ok(result);

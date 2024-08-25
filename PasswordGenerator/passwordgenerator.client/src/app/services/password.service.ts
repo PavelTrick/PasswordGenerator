@@ -21,7 +21,7 @@ export class PasswordService {
     return this.http.post<GenerateResult>(this.apiUrl, request, { headers, withCredentials: true }).pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status) {
-          alert(`Backend returned error code ${error.status} ${error.error.title}`);
+          alert(`Backend returned error code ${error.status} ${error.error.title}. ${error.error.detail}.`);
         } else {
           alert('An unexpected error occurred. Please try again later.');
         }

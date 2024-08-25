@@ -230,7 +230,7 @@ namespace PasswordGenerator.Server.Migrations
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -241,7 +241,9 @@ namespace PasswordGenerator.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserIdentifier");
+                    b.HasIndex("UserIdentifier", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Password_UserIdentifier_Code");
 
                     b.ToTable("Passwords");
                 });
