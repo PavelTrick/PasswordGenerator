@@ -1,4 +1,5 @@
-﻿using PasswordGenerator.Server.DAL;
+﻿using Microsoft.EntityFrameworkCore;
+using PasswordGenerator.Server.DAL;
 using PasswordGenerator.Server.DAL.Models;
 using PasswordGenerator.Server.Models;
 using System.Diagnostics;
@@ -83,9 +84,9 @@ namespace PasswordGenerator.Server.BLL.Services
 
         public async Task<bool> ClearUserPasswords(string userId)
         {
-            var passwords = _context.Passwords.Where(password => password.UserIdentifier == userId).ToArray();
-            _context.Passwords.RemoveRange(passwords);
-            var result = await _context.SaveChangesAsync();
+            var result = await _context.Passwords
+                               .Where(password => password.UserIdentifier == userId)
+                               .ExecuteDeleteAsync();
 
             return result > 0;
         }
