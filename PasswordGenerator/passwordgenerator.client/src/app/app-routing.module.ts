@@ -10,7 +10,6 @@ const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   { path: 'home', component: PasswordGeneratorComponent, canActivate: [AuthGuard]  },
   { path: '', redirectTo: '/home', pathMatch: 'full' },
-  //{ path: '**', redirectTo: '/home' }
 ];
 
 @NgModule({

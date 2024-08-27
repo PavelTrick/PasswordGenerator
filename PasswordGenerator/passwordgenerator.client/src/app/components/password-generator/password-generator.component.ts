@@ -1,11 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { PasswordService, PasswordRequest } from '../../services/password.service';
 import { Password } from '../../models/password.model';
-import { GenerateResult } from '../../models/generate-result.model';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
-import { HttpErrorResponse } from '@angular/common/http';
-import { catchError, finalize, of } from 'rxjs';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'password-generator',
@@ -22,7 +20,6 @@ export class PasswordGeneratorComponent implements OnInit {
     includeLowercase: true,
   };
 
-  private userId: number = 1;
   public passwords: Password[] = [];
   public generateResult: any;
   public statistic: any;
@@ -68,7 +65,7 @@ export class PasswordGeneratorComponent implements OnInit {
 
   onClear() {
     this.deleteInProgress = true;
-    this.passwordService.delete(this.userId)
+    this.passwordService.delete()
       .pipe(
         finalize(() => {
           this.deleteInProgress = false;
@@ -86,12 +83,10 @@ export class PasswordGeneratorComponent implements OnInit {
 
   private loadUserPasswords() {
     this.passwordService.getUserPasswords().subscribe(result => {
-
-      console.log(result);
       this.passwords = result;
     });
 
-    this.passwordService.getUserPasswordStatistic(this.userId).subscribe(result => {
+    this.passwordService.getUserPasswordStatistic().subscribe(result => {
       this.statistic = result;
     });
   }

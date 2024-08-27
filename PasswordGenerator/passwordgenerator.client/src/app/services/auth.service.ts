@@ -18,10 +18,8 @@ export class AuthService {
 
     return this.http.post<LoginResponse>(`${this.baseUrl}/login`, loginModel, { headers, withCredentials: true }).pipe(
       map(response => {
-        // Store token or user info in local storage/session storage
-        console.log("login response: ", response);
         if (response) {
-          localStorage.setItem('authToken', response.accessToken); // Adjust according to your API response
+          localStorage.setItem('authToken', response.accessToken);
           return of(true);
         }
         return of(false);
@@ -33,9 +31,9 @@ export class AuthService {
         } else {
           alert('An unexpected error occurred. Please try again later.');
         }
-        return of(false);  // Emit false in case of an error
+        return of(false);
       })
-      )
+    )
   }
 
   isAuthenticated(): boolean {
@@ -43,38 +41,31 @@ export class AuthService {
     return !!token;
   }
 
-  // Logout method
   logout(): Observable<any> {
     localStorage.removeItem('authToken');
     return this.http.post<any>(`${this.baseUrl}/logout`, { withCredentials: true })
   }
 
-register(login: string, password: string): Observable<boolean> {
-  console.log(login, password);
-  const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-  const loginModel = new LoginModel(login, password);
+  register(login: string, password: string): Observable<boolean> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const loginModel = new LoginModel(login, password);
 
-  return this.http.post<LoginResponse>(`${this.baseUrl}/register`, loginModel, { headers, withCredentials: true }).pipe(
-    map(response => {
-      // Store token or user info in local storage/session storage
-      if (response) {
-        localStorage.setItem('authToken', response.accessToken); // Adjust according to your API response
-        return true;
-      }
-      return false;
-    }),
-    catchError((error: HttpErrorResponse) => {
-      if (error.status) {
-        alert(`Backend returned code ${error.status} ${error.statusText}`);
-      } else {
-        alert('An unexpected error occurred. Please try again later.');
-      }
-      return of(false);  // Emit false in case of an error
-    })
-  );
-}
-
-//   logout(): Observable<any> {
-//     return this.http.post<any>(`${this.baseUrl}/logout`, {});
-//   }
+    return this.http.post<LoginResponse>(`${this.baseUrl}/register`, loginModel, { headers, withCredentials: true }).pipe(
+      map(response => {
+        if (response) {
+          localStorage.setItem('authToken', response.accessToken);
+          return true;
+        }
+        return false;
+      }),
+      catchError((error: HttpErrorResponse) => {
+        if (error.status) {
+          alert(`Backend returned code ${error.status} ${error.statusText}`);
+        } else {
+          alert('An unexpected error occurred. Please try again later.');
+        }
+        return of(false);
+      })
+    );
+  }
 }

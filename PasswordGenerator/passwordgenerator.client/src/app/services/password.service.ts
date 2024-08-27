@@ -30,14 +30,8 @@ export class PasswordService {
     );
   }
 
-  getAll(): Observable<Password[]> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' })
-    return this.http.get<Password[]>(this.apiUrl, { headers, withCredentials: true });
-  }
-
   getUserPasswords(): Observable<Password[]> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    return this.http.get<Password[]>(`${this.apiUrl}/list`, { headers, withCredentials: true })
+    return this.http.get<Password[]>(`${this.apiUrl}/list`, { withCredentials: true })
       .pipe(
         catchError((error: HttpErrorResponse) => {
           if (error.status) {
@@ -45,26 +39,22 @@ export class PasswordService {
           } else {
             alert('An unexpected error occurred. Please try again later.');
           }
-
           if(error.status === 400) {
             this.authService.logout();
             localStorage.removeItem('authToken');
             this.router.navigate(['/login']);
           }
-
           return of([]);
         })
       );
   }
 
-  delete(userId: number): Observable<boolean> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' })
-    return this.http.delete<boolean>(`${this.apiUrl}`, { headers, withCredentials: true });
+  delete(): Observable<boolean> {
+    return this.http.delete<boolean>(`${this.apiUrl}`, { withCredentials: true });
   }
 
-  getUserPasswordStatistic(userId: number): Observable<Statistic> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' })
-    return this.http.get<Statistic>(`${this.apiUrl}/statistic`, { headers, withCredentials: true })
+  getUserPasswordStatistic(): Observable<Statistic> {
+    return this.http.get<Statistic>(`${this.apiUrl}/statistic`, { withCredentials: true })
     .pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status) {
