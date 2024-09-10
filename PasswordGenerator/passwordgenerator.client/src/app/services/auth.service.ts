@@ -3,20 +3,21 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import { LoginResponse } from '../models/login-response.model';
 import { LoginModel } from '../models/login.model';
+import { BaseApiService } from './base-api.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
-  private baseUrl = 'https://localhost:5091/api/account';
-
-  constructor(private http: HttpClient) { }
+export class AuthService extends BaseApiService {
+  constructor(private http: HttpClient) {
+    super();
+   }
 
   login(login: string, password: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const loginModel = new LoginModel(login, password);
 
-    return this.http.post<LoginResponse>(`${this.baseUrl}/login`, loginModel, { headers, withCredentials: true }).pipe(
+    return this.http.post<LoginResponse>(`${this.baseUrl}/account/login`, loginModel, { headers, withCredentials: true }).pipe(
       map(response => {
         if (response) {
           localStorage.setItem('authToken', response.accessToken);
@@ -43,14 +44,14 @@ export class AuthService {
 
   logout(): Observable<any> {
     localStorage.removeItem('authToken');
-    return this.http.post<any>(`${this.baseUrl}/logout`, { withCredentials: true })
+    return this.http.post<any>(`${this.baseUrl}/account/logout`, { withCredentials: true })
   }
 
   register(login: string, password: string): Observable<boolean> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const loginModel = new LoginModel(login, password);
 
-    return this.http.post<LoginResponse>(`${this.baseUrl}/register`, loginModel, { headers, withCredentials: true }).pipe(
+    return this.http.post<LoginResponse>(`${this.baseUrl}/account/register`, loginModel, { headers, withCredentials: true }).pipe(
       map(response => {
         if (response) {
           localStorage.setItem('authToken', response.accessToken);

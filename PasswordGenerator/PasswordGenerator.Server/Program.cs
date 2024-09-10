@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
+// local
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Listen(IPAddress.Any, 5091, listenOptions =>
@@ -45,12 +46,14 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
 });
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp",
      policyBuilder =>
      {
          policyBuilder.WithOrigins("https://127.0.0.1:4200")
+         //policyBuilder.WithOrigins("https://password-generator-client-f5hcafgrdbfsdrgx.polandcentral-01.azurewebsites.net")
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();

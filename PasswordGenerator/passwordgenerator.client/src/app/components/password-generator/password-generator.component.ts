@@ -3,7 +3,7 @@ import { PasswordService, PasswordRequest } from '../../services/password.servic
 import { Password } from '../../models/password.model';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { concatMap, finalize, of } from 'rxjs';
 
 @Component({
   selector: 'password-generator',
@@ -73,6 +73,7 @@ export class PasswordGeneratorComponent implements OnInit {
       )
       .subscribe(_ => {
         this.loadUserPasswords();
+        this.generateResult = null;
       });
   }
 
@@ -82,12 +83,18 @@ export class PasswordGeneratorComponent implements OnInit {
   }
 
   private loadUserPasswords() {
-    this.passwordService.getUserPasswords().subscribe(result => {
-      this.passwords = result;
-    });
+    this.passwordService.getUserPasswords().pipe(
+      concatMap(result => {
+        if (result === null) {
+          this.passwords = [];
+          return of(null);
+        }
 
-    this.passwordService.getUserPasswordStatistic().subscribe(result => {
-      this.statistic = result;
+        this.passwords = result;
+        return this.passwordService.getUserPasswordStatistic();
+      })
+    ).subscribe(statistic => {
+      this.statistic = statistic;
     });
   }
 }
