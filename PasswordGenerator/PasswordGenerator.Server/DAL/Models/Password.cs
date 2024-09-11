@@ -8,6 +8,7 @@ namespace PasswordGenerator.Server.DAL.Models
         public int Id { get; set; }
         public string Code { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int CodeHashCounter { get; set; }
         public string UserIdentifier { get; set; }
 
         [ForeignKey("UserIdentifier")]

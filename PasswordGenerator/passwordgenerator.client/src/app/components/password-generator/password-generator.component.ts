@@ -11,6 +11,9 @@ import { concatMap, finalize, of } from 'rxjs';
   styleUrls: ['./password-generator.component.scss']
 })
 export class PasswordGeneratorComponent implements OnInit {
+
+  public useSimpleGenerator: boolean = false;
+
   passwordRequest: PasswordRequest = {
     amount: 1,
     length: 5,
@@ -18,6 +21,7 @@ export class PasswordGeneratorComponent implements OnInit {
     includeNumbers: false,
     includeUppercase: false,
     includeLowercase: true,
+    useSimpleGenerator: this.useSimpleGenerator,
   };
 
   public passwords: Password[] = [];

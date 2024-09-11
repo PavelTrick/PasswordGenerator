@@ -25,7 +25,7 @@ namespace PasswordGenerator.Server.BLL.Services
 
             totalTime.Start();
             generateTime.Start();
-            List<string> generatedPassword = _generatorService.GeneratePasswords(passwordRequest, result, userId);
+            List<Password> generatedPassword = _generatorService.GeneratePasswords(passwordRequest, result, userId);
             generateTime.Stop();
 
             var dateNow = DateTime.UtcNow;
@@ -35,10 +35,10 @@ namespace PasswordGenerator.Server.BLL.Services
             {
                 newPasswords.Add(new Password
                 {
-                    Code = password,
+                    Code = password.Code,
                     CreatedAt = dateNow,
                     UserIdentifier = userId,
-
+                    CodeHashCounter = password.CodeHashCounter
                 });
             }
 
@@ -49,7 +49,7 @@ namespace PasswordGenerator.Server.BLL.Services
 
             result.GenerateTime = generateTime.ElapsedMilliseconds;
             result.ExecutionTime = totalTime.ElapsedMilliseconds;
-            result.Passwords = generatedPassword.ToArray();
+            result.Passwords = generatedPassword.Select(i => i.Code).ToArray();
 
             return result;
         }

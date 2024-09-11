@@ -8,6 +8,6 @@
         public bool IncludeNumbers { get; set; }
         public bool IncludeUppercase { get; set; }
         public bool IncludeLowercase { get; set; }
-        public double ExpiredIn { get; set; }
+        public bool UseSimpleGenerator { get; set; }
     }
 }

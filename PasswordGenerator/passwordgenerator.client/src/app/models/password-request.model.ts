@@ -5,4 +5,5 @@ export interface PasswordRequest {
     includeNumbers: boolean;
     includeUppercase: boolean;
     includeLowercase: boolean;
+    useSimpleGenerator: boolean;
   }
