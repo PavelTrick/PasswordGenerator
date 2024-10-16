@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging;
 using PasswordGenerator.Server.DAL;
 using PasswordGenerator.Server.DAL.Models;
 using PasswordGenerator.Server.Models;
 using System.Diagnostics;
+using System.Linq;
 
 namespace PasswordGenerator.Server.BLL.Services
 {
@@ -17,41 +19,28 @@ namespace PasswordGenerator.Server.BLL.Services
             _generatorService = new GeneratorService(_context);
         }
 
-        public async Task<GeneratedPasswords> GenerateAndSave(PasswordRequest passwordRequest, string userId)
+        public async Task<List<String>> TakePasswords(PasswordRequest passwordRequest, string userId)
         {
-            GeneratedPasswords result = new GeneratedPasswords();
-            Stopwatch generateTime = new Stopwatch();
-            Stopwatch totalTime = new Stopwatch();
-
-            totalTime.Start();
-            generateTime.Start();
-            List<Password> generatedPassword = _generatorService.GeneratePasswords(passwordRequest, result, userId);
-            generateTime.Stop();
-
             var dateNow = DateTime.UtcNow;
-            List<Password> newPasswords = new List<Password>();
+            var user = _context.Users.FirstOrDefault(u => u.Id == userId);
+            int userPasswordCount = _context.Users
+                .Include(u => u.UserPasswords)
+                .ThenInclude(up => up.Password)
+                .FirstOrDefault(u => u.Id == userId)?.UserPasswords?.Count() ?? 0;
+            var passwordCount = _context.Passwords.Count();
+            var countDifference = passwordCount - userPasswordCount;
+            Boolean needGenerate = countDifference < passwordRequest.Amount;
 
-            foreach (var password in generatedPassword)
+            if (needGenerate)
             {
-                newPasswords.Add(new Password
-                {
-                    Code = password.Code,
-                    CreatedAt = dateNow,
-                    UserIdentifier = userId,
-                    CodeHashCounter = password.CodeHashCounter
-                });
+                await _generatorService.GeneratePasswords(passwordRequest, passwordRequest.Amount - countDifference);
             }
 
-            _context.Passwords.AddRange(newPasswords);
+            List<Password> newPasswords = _context.Passwords.Skip(userPasswordCount).Take(passwordRequest.Amount).ToList();
+            user.UserPasswords.AddRange(newPasswords.Select(newPassword => new UserPassword { UserId = user.Id, PasswordId = newPassword.Id }).ToList());
             await _context.SaveChangesAsync();
 
-            totalTime.Stop();
-
-            result.GenerateTime = generateTime.ElapsedMilliseconds;
-            result.ExecutionTime = totalTime.ElapsedMilliseconds;
-            result.Passwords = generatedPassword.Select(i => i.Code).ToArray();
-
-            return result;
+            return newPasswords.Select(p => p.Code).ToList();
         }
 
         public List<Password> GetAll()
@@ -61,20 +50,24 @@ namespace PasswordGenerator.Server.BLL.Services
 
         public List<Password> GetUserPasswords(string userId)
         {
-            return _context.Passwords
-                .Where(password => password.UserIdentifier == userId)
-                ?.OrderByDescending(password => password.CreatedAt)
-                ?.Take(1000)
-                ?.ToList() ?? new List<Password>();
+            var passwords = _context.Users
+                .Include(u => u.UserPasswords)
+                .ThenInclude(up => up.Password)
+                .Where(u => u.Id == userId)
+                .SelectMany(u => u.UserPasswords.Select(up => up.Password))
+                .OrderByDescending(password => password.CreatedAt)
+                .Take(1000)
+                .ToList();
+
+            return passwords.Count > 0 ? passwords : new List<Password>();
         }
 
-        public Statistic GetUserPasswordStatistic(string userId)
+        public Statistic GetPasswordsStatistic()
         {
             Statistic statistic = new Statistic();
-            var passwords = _context.Passwords.Where(password => password.UserIdentifier == userId);
 
-            statistic.TotalCount = passwords.Count();
-            statistic.DuplicateCount = passwords
+            statistic.TotalCount = _context.Passwords.Count();
+            statistic.DuplicateCount = _context.Passwords
                 .GroupBy(password => password.Code)
                 .Where(group => group.Count() > 1)
                 .Count();
@@ -84,11 +77,43 @@ namespace PasswordGenerator.Server.BLL.Services
 
         public async Task<bool> ClearUserPasswords(string userId)
         {
-            var result = await _context.Passwords
-                               .Where(password => password.UserIdentifier == userId)
-                               .ExecuteDeleteAsync();
+            var user = _context.Users
+                .Include(u => u.UserPasswords)
+                .ThenInclude(up => up.Password)
+                .FirstOrDefault(u => u.Id == userId);
 
-            return result > 0;
+            if (user != null)
+            {
+                user.UserPasswords = new List<UserPassword>();
+                await _context.SaveChangesAsync();
+            }
+
+            return true;
+        }
+
+        public async Task<bool> ClearPasswordStore()
+        {
+            var allPasswords = _context.Passwords.ToList();
+            _context.Passwords.RemoveRange(allPasswords);
+
+            var statistic = _context.GenerateStatistics;
+            _context.GenerateStatistics.RemoveRange(statistic);
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task GeneratePasswords(PasswordRequest passwordRequest)
+        {
+            await _generatorService.GeneratePasswords(passwordRequest);
+        }
+
+        public List<GenerateStatistic> GetGenerateLogs()
+        {
+            return _context.GenerateStatistics
+                .Include(statistic => statistic.StatisticIterations)
+                ?.OrderByDescending(password => password.Id)
+                ?.Take(100)
+                ?.ToList() ?? new List<GenerateStatistic>();
         }
     }
 }

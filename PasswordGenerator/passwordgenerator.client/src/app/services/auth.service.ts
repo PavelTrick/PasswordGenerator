@@ -13,6 +13,29 @@ export class AuthService extends BaseApiService {
     super();
    }
 
+   
+  test(login: string, password: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+
+    return this.http.get<LoginResponse>(`${this.baseUrl}/account/test`, { headers, withCredentials: true }).pipe(
+      map(response => {
+        if (response) {
+          return of(response);
+        }
+        return of(response);
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.log(error);
+        if (error.status) {
+          alert(`Backend returned code ${error.status} ${error.error.title}`);
+        } else {
+          alert('An unexpected error occurred. Please try again later.');
+        }
+        return of(error);
+      })
+    )
+  }
+
   login(login: string, password: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const loginModel = new LoginModel(login, password);

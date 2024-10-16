@@ -3,6 +3,7 @@ using PasswordGenerator.Server.DAL;
 using PasswordGenerator.Server.BLL.Services;
 using PasswordGenerator.Server.Models;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PasswordGenerator.Server.Controllers
 {
@@ -39,7 +40,7 @@ namespace PasswordGenerator.Server.Controllers
         }
 
         [HttpGet("statistic")]
-        public IActionResult GetUserPasswordStatistic()
+        public IActionResult GetPasswordStatistic()
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
@@ -53,13 +54,22 @@ namespace PasswordGenerator.Server.Controllers
                 return Unauthorized("User not found");
             }
 
-            var generatedPassword = _passwordGeneratorService.GetUserPasswordStatistic(userId);
+            var generatedPassword = _passwordGeneratorService.GetPasswordsStatistic();
 
             return Ok(generatedPassword);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> GeneratePasswords([FromBody] PasswordRequest request)
+
+        [HttpGet("generate/log")]
+        public IActionResult GetGenerateLog()
+        {
+            var generatedPassword = _passwordGeneratorService.GetGenerateLogs();
+
+            return Ok(generatedPassword);
+        }
+
+        [HttpPost("new")]
+        public async Task<IActionResult> GetNewUserPasswords([FromBody] PasswordRequest request)
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
@@ -75,10 +85,24 @@ namespace PasswordGenerator.Server.Controllers
 
             try
             {
-
-                GeneratedPasswords generatedPassword = await _passwordGeneratorService.GenerateAndSave(request, userId);
+                List<string> generatedPassword = await _passwordGeneratorService.TakePasswords(request, userId);
 
                 return Ok(generatedPassword);
+            }
+            catch (Exception ex)
+            {
+                return Problem($"{ex.Message}");
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("generate")]
+        public async Task<IActionResult> GeneratePasswords([FromBody] PasswordRequest request)
+        {
+            try
+            {
+                await _passwordGeneratorService.GeneratePasswords(request);
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -102,6 +126,14 @@ namespace PasswordGenerator.Server.Controllers
             }
 
             bool result = await _passwordGeneratorService.ClearUserPasswords(userId);
+
+            return Ok(result);
+        }
+
+        [HttpDelete("store")]
+        public async Task<IActionResult> DeletePasswordStore()
+        {
+            bool result = await _passwordGeneratorService.ClearPasswordStore();
 
             return Ok(result);
         }

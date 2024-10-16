@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace PasswordGenerator.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate001 : Migration
+    public partial class InitialCreate1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -48,6 +48,35 @@ namespace PasswordGenerator.Server.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GenerateStatistics",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PasswordAmount = table.Column<int>(type: "int", nullable: false),
+                    TotalTime = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GenerateStatistics", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Passwords",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CodeHashCounter = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Passwords", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -157,24 +186,51 @@ namespace PasswordGenerator.Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Passwords",
+                name: "GenerateStatisticIteration",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UserIdentifier = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    IterationNumber = table.Column<int>(type: "int", nullable: false),
+                    LogTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DuplicationCount = table.Column<int>(type: "int", nullable: false),
+                    GeneratePasswordTime = table.Column<long>(type: "bigint", nullable: false),
+                    VerifyDBUniquesTime = table.Column<long>(type: "bigint", nullable: false),
+                    GenerateStatisticId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Passwords", x => x.Id);
+                    table.PrimaryKey("PK_GenerateStatisticIteration", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Passwords_AspNetUsers_UserIdentifier",
-                        column: x => x.UserIdentifier,
+                        name: "FK_GenerateStatisticIteration_GenerateStatistics_GenerateStatisticId",
+                        column: x => x.GenerateStatisticId,
+                        principalTable: "GenerateStatistics",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserPasswords",
+                columns: table => new
+                {
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    PasswordId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserPasswords", x => new { x.UserId, x.PasswordId });
+                    table.ForeignKey(
+                        name: "FK_UserPasswords_AspNetUsers_UserId",
+                        column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserPasswords_Passwords_PasswordId",
+                        column: x => x.PasswordId,
+                        principalTable: "Passwords",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -217,9 +273,14 @@ namespace PasswordGenerator.Server.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Passwords_UserIdentifier",
-                table: "Passwords",
-                column: "UserIdentifier");
+                name: "IX_GenerateStatisticIteration_GenerateStatisticId",
+                table: "GenerateStatisticIteration",
+                column: "GenerateStatisticId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserPasswords_PasswordId",
+                table: "UserPasswords",
+                column: "PasswordId");
         }
 
         /// <inheritdoc />
@@ -241,13 +302,22 @@ namespace PasswordGenerator.Server.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Passwords");
+                name: "GenerateStatisticIteration");
+
+            migrationBuilder.DropTable(
+                name: "UserPasswords");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
+                name: "GenerateStatistics");
+
+            migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Passwords");
         }
     }
 }

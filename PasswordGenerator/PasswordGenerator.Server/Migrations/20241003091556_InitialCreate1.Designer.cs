@@ -12,8 +12,8 @@ using PasswordGenerator.Server.DAL;
 namespace PasswordGenerator.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240820203548_InitialCreate001")]
-    partial class InitialCreate001
+    [Migration("20241003091556_InitialCreate1")]
+    partial class InitialCreate1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -223,6 +223,58 @@ namespace PasswordGenerator.Server.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("PasswordGenerator.Server.DAL.Models.GenerateStatistic", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PasswordAmount")
+                        .HasColumnType("int");
+
+                    b.Property<long>("TotalTime")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GenerateStatistics");
+                });
+
+            modelBuilder.Entity("PasswordGenerator.Server.DAL.Models.GenerateStatisticIteration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DuplicationCount")
+                        .HasColumnType("int");
+
+                    b.Property<long>("GeneratePasswordTime")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("GenerateStatisticId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IterationNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LogTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("VerifyDBUniquesTime")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GenerateStatisticId");
+
+                    b.ToTable("GenerateStatisticIteration");
+                });
+
             modelBuilder.Entity("PasswordGenerator.Server.DAL.Models.Password", b =>
                 {
                     b.Property<int>("Id")
@@ -235,18 +287,30 @@ namespace PasswordGenerator.Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("CodeHashCounter")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserIdentifier")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserIdentifier");
-
                     b.ToTable("Passwords");
+                });
+
+            modelBuilder.Entity("PasswordGenerator.Server.DAL.Models.UserPassword", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("PasswordId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "PasswordId");
+
+                    b.HasIndex("PasswordId");
+
+                    b.ToTable("UserPasswords");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -300,15 +364,49 @@ namespace PasswordGenerator.Server.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PasswordGenerator.Server.DAL.Models.Password", b =>
+            modelBuilder.Entity("PasswordGenerator.Server.DAL.Models.GenerateStatisticIteration", b =>
                 {
-                    b.HasOne("PasswordGenerator.Server.DAL.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserIdentifier")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.HasOne("PasswordGenerator.Server.DAL.Models.GenerateStatistic", "GenerateStatistic")
+                        .WithMany("StatisticIterations")
+                        .HasForeignKey("GenerateStatisticId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("GenerateStatistic");
+                });
+
+            modelBuilder.Entity("PasswordGenerator.Server.DAL.Models.UserPassword", b =>
+                {
+                    b.HasOne("PasswordGenerator.Server.DAL.Models.Password", "Password")
+                        .WithMany("UserPasswords")
+                        .HasForeignKey("PasswordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PasswordGenerator.Server.DAL.Models.ApplicationUser", "User")
+                        .WithMany("UserPasswords")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Password");
+
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PasswordGenerator.Server.DAL.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("UserPasswords");
+                });
+
+            modelBuilder.Entity("PasswordGenerator.Server.DAL.Models.GenerateStatistic", b =>
+                {
+                    b.Navigation("StatisticIterations");
+                });
+
+            modelBuilder.Entity("PasswordGenerator.Server.DAL.Models.Password", b =>
+                {
+                    b.Navigation("UserPasswords");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,10 +1,9 @@
-﻿using PasswordGenerator.Server.DAL.Models;
-using PasswordGenerator.Server.Models;
+﻿using PasswordGenerator.Server.Models;
 
 namespace PasswordGenerator.Server.BLL.Services
 {
     public interface IGeneratorService
     {
-        List<Password> GeneratePasswords(PasswordRequest passwordRequest, GeneratedPasswords generatedPasswordsResult, string userId);
+        Task GeneratePasswords(PasswordRequest passwordRequest, int generateAmount = 0);
     }
 }

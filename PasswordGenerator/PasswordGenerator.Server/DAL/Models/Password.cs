@@ -9,10 +9,8 @@ namespace PasswordGenerator.Server.DAL.Models
         public string Code { get; set; }
         public DateTime CreatedAt { get; set; }
         public int CodeHashCounter { get; set; }
-        public string UserIdentifier { get; set; }
 
-        [ForeignKey("UserIdentifier")]
-        [JsonIgnore]
-        public ApplicationUser User { get; set; }
+        public ICollection<UserPassword> UserPasswords { get; set; } = new List<UserPassword>();
+
     }
 }

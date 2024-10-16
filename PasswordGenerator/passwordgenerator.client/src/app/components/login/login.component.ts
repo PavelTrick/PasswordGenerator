@@ -20,6 +20,22 @@ export class LoginComponent {
     }
   
     onSubmit() {
+      const { login, password } = this.loginForm.value;
+      this.authService.test(login, password).subscribe(
+        response => {
+          console.log(response)
+        },
+        (error: HttpErrorResponse) => {
+          if (error instanceof HttpErrorResponse) {
+            if (error.status) {
+              alert(`Backend returned code ${error.status} ${error.statusText}`);
+            }
+          } else {
+            alert('An unexpected error occurred. Please try again later.');
+          }
+        });
+
+
       if (this.loginForm.valid) {
         const { login, password } = this.loginForm.value;
         this.authService.login(login, password).subscribe(

@@ -14,7 +14,7 @@ builder.WebHost.ConfigureKestrel(options =>
 {
     options.Listen(IPAddress.Any, 5091, listenOptions =>
     {
-        listenOptions.UseHttps(); // Use default development certificate
+        listenOptions.UseHttps();
     });
 });
 
@@ -52,13 +52,15 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAngularApp",
      policyBuilder =>
      {
-         policyBuilder.WithOrigins("https://127.0.0.1:4200")
-         //policyBuilder.WithOrigins("https://password-generator-client-f5hcafgrdbfsdrgx.polandcentral-01.azurewebsites.net")
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
+         policyBuilder.WithOrigins("https://password-generator-client-f5hcafgrdbfsdrgx.polandcentral-01.azurewebsites.net", "https://password-generator-trigger.azurewebsites.net")
+                     .AllowAnyHeader()
+                     .AllowAnyMethod()
+                     .AllowCredentials();
      });
 });
+//policyBuilder.WithOrigins("https://localhost:4200")
+//policyBuilder.WithOrigins("https://passwordgenerator.polandcentral.cloudapp.azure.com")
+//policyBuilder.WithOrigins("https://password-generator-client-f5hcafgrdbfsdrgx.polandcentral-01.azurewebsites.net")
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

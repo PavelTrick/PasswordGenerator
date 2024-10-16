@@ -19,6 +19,16 @@ namespace PasswordGenerator.Server.Controllers
             _signInManager = signInManager;
         }
 
+        [HttpGet("test"), AllowAnonymous]
+        public async Task<IActionResult> Test()
+        {
+            LoginResponse LoginResponse = new LoginResponse()
+            {
+                AccessToken = Guid.NewGuid().ToString(),
+            };
+            return Ok(LoginResponse);
+        }
+
         [HttpPost("register"), AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] LoginModel model)
         {

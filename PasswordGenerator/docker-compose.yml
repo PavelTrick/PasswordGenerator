@@ -1,0 +1,6 @@
+services:
+  passwordgenerator.server:
+    image: ${DOCKER_REGISTRY-}passwordgeneratorserver
+    build:
+      context: .
+      dockerfile: PasswordGenerator.Server\Dockerfile

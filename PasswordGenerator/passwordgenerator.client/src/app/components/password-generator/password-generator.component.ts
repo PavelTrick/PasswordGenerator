@@ -4,6 +4,7 @@ import { Password } from '../../models/password.model';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { concatMap, finalize, of } from 'rxjs';
+import { GenerateStatistic } from '../../models/generate-statistic.model';
 
 @Component({
   selector: 'password-generator',
@@ -12,14 +13,14 @@ import { concatMap, finalize, of } from 'rxjs';
 })
 export class PasswordGeneratorComponent implements OnInit {
 
-  public useSimpleGenerator: boolean = false;
+  public useSimpleGenerator: boolean = true;
 
   passwordRequest: PasswordRequest = {
     amount: 1,
     length: 5,
-    includeSpecial: false,
-    includeNumbers: false,
-    includeUppercase: false,
+    includeSpecial: true,
+    includeNumbers: true,
+    includeUppercase: true,
     includeLowercase: true,
     useSimpleGenerator: this.useSimpleGenerator,
   };
@@ -28,13 +29,20 @@ export class PasswordGeneratorComponent implements OnInit {
   public generateResult: any;
   public statistic: any;
 
+  public generateLogs: GenerateStatistic[] = [];
+
   public generateInProgress: boolean = false;
   public deleteInProgress: boolean = false;
+  public deleteAllInProgress: boolean = false;
 
   constructor(private passwordService: PasswordService, private authService: AuthService, private router: Router) { }
 
   ngOnInit() {
     this.loadUserPasswords();
+    console.log('[ngOnInit]')
+    setInterval(() => {
+      this.loadUserPasswords();
+    }, 60000)
   }
 
   get formattedPasswords(): string {
@@ -48,12 +56,16 @@ export class PasswordGeneratorComponent implements OnInit {
   }
 
   get deleteBtnText(): string {
-    return this.deleteInProgress ? "Clearing..." : "Clear all";
+    return this.deleteInProgress ? "Clearing..." : "Clear User Passwords";
+  }
+
+  get deleteAllBtnText(): string {
+    return this.deleteAllInProgress ? "Clearing..." : "Clear Password Store";
   }
 
   onGenerate() {
     this.generateInProgress = true;
-    this.passwordService.generatePassword(this.passwordRequest)
+    this.passwordService.getNewPasswords(this.passwordRequest)
       .pipe(
         finalize(() => {
           this.generateInProgress = false;
@@ -64,6 +76,20 @@ export class PasswordGeneratorComponent implements OnInit {
           this.generateResult = result;
           this.loadUserPasswords();
         }
+      });
+  }
+
+  generatePasswords() {
+    console.log('[generatePasswords]')
+    this.generateInProgress = true;
+    this.passwordService.generatePassword(this.passwordRequest)
+      .pipe(
+        finalize(() => {
+          this.generateInProgress = false;
+        })
+      )
+      .subscribe(result => {
+        this.loadUserPasswords();
       });
   }
 
@@ -81,24 +107,37 @@ export class PasswordGeneratorComponent implements OnInit {
       });
   }
 
+  onClearAll() {
+    this.deleteAllInProgress = true;
+    this.passwordService.deleteStore()
+      .pipe(
+        finalize(() => {
+          this.deleteAllInProgress = false;
+        })
+      )
+      .subscribe(_ => {
+        this.loadUserPasswords();
+        this.generateResult = null;
+      });
+  }
+
   onLogout() {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
 
   private loadUserPasswords() {
-    this.passwordService.getUserPasswords().pipe(
-      concatMap(result => {
-        if (result === null) {
-          this.passwords = [];
-          return of(null);
-        }
-
-        this.passwords = result;
-        return this.passwordService.getUserPasswordStatistic();
-      })
-    ).subscribe(statistic => {
+    console.log('[loadUserPasswords]');
+    this.passwordService.getUserPasswords().subscribe(result => {
+        this.passwords = result ?? [];
+    });
+    
+    this.passwordService.getPasswordStatistic().subscribe(statistic => {
       this.statistic = statistic;
+    });
+
+    this.passwordService.getLogs().subscribe(generateLogs => {
+      this.generateLogs = generateLogs;
     });
   }
 }

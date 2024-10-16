@@ -6,9 +6,12 @@ namespace PasswordGenerator.Server.BLL.Services
     public interface IPasswordService
     {
         List<Password> GetAll();
-        Task<GeneratedPasswords> GenerateAndSave(PasswordRequest passwordRequest, string userId);
+        Task<List<string>> TakePasswords(PasswordRequest passwordRequest, string userId);
         List<Password> GetUserPasswords(string userId);
-        Statistic GetUserPasswordStatistic(string userId);
+        Statistic GetPasswordsStatistic();
+        List<GenerateStatistic> GetGenerateLogs();
         Task<bool> ClearUserPasswords(string userId);
+        Task<bool> ClearPasswordStore();
+        Task GeneratePasswords(PasswordRequest passwordRequest);
     }
 }

@@ -1,6 +1,8 @@
+import { GenerateStatisticIteration } from "./generate-statistic-iteration.model";
+
 export interface GenerateStatistic {
-    logTime: string;
-    duplicationCount: number;
-    generatePasswordTime: number;
-    verifyDBUniquesTime: number;
-  }
+    id: number;
+    passwordAmount: number;
+    totalTime: number;
+    statisticIterations: GenerateStatisticIteration[];
+}
